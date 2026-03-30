@@ -1,0 +1,21 @@
+FROM eclipse-temurin:11-jdk-jammy
+
+# Install Maven if not included (eclipse-temurin:8-jdk-jammy should have it, but to be safe)
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy the entire source code
+COPY . .
+
+# Run the build process for server-related modules only, excluding client-dependent modules
+RUN mvn clean install -DskipTests -pl !Mage.Client,!Mage.Verify,!Mage.Reports,!Mage.Tests
+
+# Package Mage.Server only
+RUN cd Mage.Server && mvn package assembly:single
+
+# Create deploy directory and copy zip
+RUN mkdir -p deploy && \
+    cp Mage.Server/target/mage-server.zip deploy/
+
+# The built artifact is now in /app/deploy/

@@ -1,0 +1,21 @@
+FROM xmage-build
+
+# Install unzip and clean up
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends unzip \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/xmage-server
+
+# Unzip the built server zip
+RUN unzip -q /app/deploy/mage-server.zip -d /opt/xmage-server
+
+COPY docker/xmage-server-entrypoint.sh /usr/local/bin/xmage-server-entrypoint.sh
+RUN chmod +x /usr/local/bin/xmage-server-entrypoint.sh
+
+ENV XMAGE_CONFIG_PATH=/opt/xmage-server/config/config.xml
+ENV XMAGE_SERVER_JAR=/opt/xmage-server/lib/mage-server-1.4.58.jar
+
+EXPOSE 17171 17179
+
+ENTRYPOINT ["xmage-server-entrypoint.sh"]
